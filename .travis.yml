@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t setimo/test-client -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true setimo/test-client npm test
+
+after_success:
+  - docker build -t setimo/multi-client ./client
+  - docker build -t setimo/multi-nginx ./nginx
+  - docker build -t setimo/multi-server ./server
+  - docker build -t setimo/multi-worker ./worker
+  # log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push the images to docker hub
+  - docker push setimo/multi-client
+  - docker push setimo/multi-nginx
+  - docker push setimo/multi-server
+  - docker push setimo/multi-worker
